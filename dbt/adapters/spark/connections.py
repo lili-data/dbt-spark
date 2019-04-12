@@ -37,7 +37,7 @@ SPARK_CREDENTIALS_CONTRACT = {
             'type': 'string',
         },
     },
-    'required': ['host', 'database', 'schema', 'cluster'],
+    'required': ['host', 'database', 'schema'],
 }
 
 
@@ -132,16 +132,9 @@ class SparkConnectionManager(SQLConnectionManager):
             logger.debug('Connection is already open, skipping open.')
             return connection
 
-        conn_url = SPARK_CONNECTION_URL.format(**connection.credentials)
-        transport = THttpClient.THttpClient(conn_url)
-
-        creds = "token:{}".format(connection.credentials['token']).encode()
-        token = base64.standard_b64encode(creds).decode()
-        transport.setCustomHeaders({
-            'Authorization': 'Basic {}'.format(token)
-        })
-
-        conn = hive.connect(thrift_transport=transport)
+        conn = hive.Connection(host=connection.credentials['host'],
+                               port=connection.credentials['port'],
+                               database=connection.credentials['database'])
         wrapped = ConnectionWrapper(conn)
 
         connection.state = 'open'
