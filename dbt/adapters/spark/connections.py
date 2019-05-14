@@ -8,6 +8,7 @@ import dbt.exceptions
 from pyhive import hive
 from thrift.transport import THttpClient
 import base64
+import time
 
 
 SPARK_CONNECTION_URL = "https://{host}:{port}/sql/protocolv1/o/0/{cluster}"
@@ -36,6 +37,16 @@ SPARK_CREDENTIALS_CONTRACT = {
         'token': {
             'type': 'string',
         },
+        'connect_timeout': {
+            'type': 'integer',
+            'minimum': 0,
+            'maximum': 60,
+        },
+        'connect_retries': {
+            'type': 'integer',
+            'minimum': 0,
+            'maximum': 60,
+        }
     },
     'required': ['host', 'database', 'schema'],
 }
@@ -132,10 +143,12 @@ class SparkConnectionManager(SQLConnectionManager):
             logger.debug('Connection is already open, skipping open.')
             return connection
 
+
         conn = hive.Connection(host=connection.credentials['host'],
                                port=connection.credentials['port'],
                                username='root',
                                database=connection.credentials['database'])
+
         wrapped = ConnectionWrapper(conn)
 
         connection.state = 'open'
@@ -144,9 +157,8 @@ class SparkConnectionManager(SQLConnectionManager):
 
     @classmethod
     def get_status(cls, cursor):
-        #status = cursor._cursor.poll()
+        # status = cursor._cursor.poll()
         return 'OK'
 
     def cancel(self, connection):
-        import ipdb; ipdb.set_trace()
         connection.handle.cancel()
