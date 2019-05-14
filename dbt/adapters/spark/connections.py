@@ -134,7 +134,7 @@ class SparkConnectionManager(SQLConnectionManager):
 
         conn = hive.Connection(host=connection.credentials['host'],
                                port=connection.credentials['port'],
-                               user='root',
+                               username='root',
                                database=connection.credentials['database'])
         wrapped = ConnectionWrapper(conn)
 
